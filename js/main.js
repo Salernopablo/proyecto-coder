@@ -3,13 +3,13 @@ saludar(nombre);
 
 function saludar(nombre){
     alert ("Bienvenido "+nombre+"!!!")
-    console.log ("Bienvenido "+nombre+" a el centro de atencion médica personalizada")
+    console.log ("Bienvenido "+nombre+" al centro de atencion médica personalizada")
 }
 
 const turnosDisponibles = ["13 hs", "14 hs", "16 hs","17 hs"];
 
 for (let i = 0; i < turnosDisponibles.length; i++) {
-    console.log(turnosDisponibles[i]);
+    console.log("Horario: "+turnosDisponibles[i]);
 }
 
 let usuario = {
