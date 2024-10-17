@@ -38,17 +38,30 @@ especialidadSelect.onchange = () => {
 // Inicializar el select de profesionales al cargar la página
 especialidadSelect.onchange();
 
-// Función para renderizar los turnos desde el localStorage
+// Función para renderizar la lista de turnos en el DOM
 function renderMisTurnos() {
     listaTurnos.innerHTML = "";
     turnos.forEach(turno => {
         const li = document.createElement("li");
         li.innerHTML = `
             ${turno.fecha} - ${turno.profesional} (${turno.especialidad})<br>
-            Paciente: ${turno.nombre} ${turno.apellido}, DNI: ${turno.dni}<br>
-            <button onclick="editarTurno(${turno.id})">Editar</button>
-            <button onclick="borrarTurno(${turno.id})">Borrar</button>
+            Paciente: ${turno.nombre} ${turno.apellido}, DNI: ${turno.dni}
         `;
+        
+        // Botón Editar
+        const btnEditar = document.createElement('button');
+        btnEditar.textContent = 'Editar';
+        btnEditar.classList.add('btn-editar'); // Agregar clase
+        btnEditar.onclick = () => editarTurno(turno.id);
+        li.appendChild(btnEditar);
+
+        // Botón Borrar
+        const btnBorrar = document.createElement('button');
+        btnBorrar.textContent = 'Borrar';
+        btnBorrar.classList.add('btn-borrar'); // Agregar clase
+        btnBorrar.onclick = () => borrarTurno(turno.id);
+        li.appendChild(btnBorrar);
+
         listaTurnos.appendChild(li);
     });
 }
@@ -72,7 +85,7 @@ formTurno.onsubmit = (e) => {
     const profesional = document.getElementById("profesional").value;
     const fecha = document.getElementById("fecha").value;
 
-    // Crear un nuevo objeto de turno
+    // Crear un nuevo turno
     const nuevoTurno = {
         id: Date.now(),
         nombre,
@@ -87,9 +100,6 @@ formTurno.onsubmit = (e) => {
     // Guardar el turno en el array y en el localStorage
     turnos.push(nuevoTurno);
     localStorage.setItem("turnos", JSON.stringify(turnos));
-
-    // Notificar al usuario
-    alert("Turno registrado exitosamente.");
     
     // Limpiar el formulario
     formTurno.reset();
@@ -101,3 +111,6 @@ formTurno.onsubmit = (e) => {
 
 // Inicializar la vista de turnos
 renderMisTurnos();
+
+// Función para editar un turno (aquí puedes implementar la lógica de edición)
+function editarTurno(id){}

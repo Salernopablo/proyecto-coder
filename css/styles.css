@@ -1,26 +1,33 @@
-/* Estilos básicos */
-body {
-    font-family: Arial, sans-serif;
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 h1 {
+    padding: 20px;
     text-align: center;
+    background-color: lightblue;
 }
 
 form {
     margin-bottom: 20px;
     display: grid;
-    grid-template-columns: 3;
+    flex-direction: column;
+    grid-template-columns: repeat(2,1fr);
+    padding: 30px;
 }
 
 label {
-    display: block;
-    margin: 10px 0 5px;
+    display:flex;
+    justify-content: center;
 }
 
 input, select {
     padding: 5px;
     margin-bottom: 10px;
+    width: 250px;
 }
 
 button {
@@ -29,6 +36,10 @@ button {
     color: white;
     border: none;
     cursor: pointer;
+    margin: 5px;
+    grid-column: span 2;
+    max-width: max-content;
+    justify-self: center;
 }
 
 button:hover {
@@ -37,8 +48,41 @@ button:hover {
 
 #mis-turnos {
     margin-top: 20px;
+    text-align: center;
+    text-decoration: underline; 
 }
 
 #listaTurnos li {
+    padding: 40px;
     margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    grid-template-rows: repeat(2,1fr);
+}
+
+.btn-editar {
+    background-color: #4CAF50; 
+    color: white;
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    max-width: max-content;
+    justify-self: center;
+}
+
+.btn-editar:hover {
+    background-color: #45a049;
+}
+
+/* Estilos para el botón Borrar */
+.btn-borrar {
+    background-color: #f44336; 
+    color: white;
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    max-width: max-content;
+    justify-self: center;
+}
+
+.btn-borrar:hover {
+    background-color: #e53935;
 }
