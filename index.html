@@ -40,15 +40,25 @@
             <!-- Selector de fecha del turno -->
             <label for="fecha">Fecha del turno:</label>
             <input type="date" id="fecha" required>
-            
-            <button type="submit" id="registrarTurno">Registrarse</button>
+
+            <!-- Selector de horario -->
+            <label for="horario">Horario:</label>
+            <select id="horario" required>
+                <option value="09:00">09:00</option>
+                <option value="10:00">10:00</option>
+                <option value="11:00">11:00</option>
+                <option value="12:00">12:00</option>
+                <option value="14:00">14:00</option>
+                <option value="15:00">15:00</option>
+            </select>
+
+            <!-- Botón para confirmar turno -->
+            <button type="submit">Confirmar Turno</button>
         </form>
     </div>
-    
+
     <!-- Sección para mostrar los turnos registrados -->
-    <div id="mis-turnos">
-        <h2>Mis Turnos</h2>
-        <ul id="listaTurnos"></ul>
-    </div>
+    <h2>Mis Turnos</h2>
+    <ul id="listaTurnos"></ul>
 </body>
 </html>

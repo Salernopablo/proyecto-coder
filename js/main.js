@@ -15,6 +15,7 @@ const especialidadSelect = document.getElementById("especialidad");
 const profesionalSelect = document.getElementById("profesional");
 const formTurno = document.getElementById("formTurno");
 const listaTurnos = document.getElementById("listaTurnos");
+const horarioSelect = document.getElementById("horario");
 
 // Llenar el select de profesionales dinámicamente según la especialidad elegida
 especialidadSelect.onchange = () => {
@@ -44,21 +45,21 @@ function renderMisTurnos() {
     turnos.forEach(turno => {
         const li = document.createElement("li");
         li.innerHTML = `
-            ${turno.fecha} - ${turno.profesional} (${turno.especialidad})<br>
+            ${turno.fecha} - ${turno.horario} - ${turno.profesional} (${turno.especialidad})<br>
             Paciente: ${turno.nombre} ${turno.apellido}, DNI: ${turno.dni}
         `;
         
         // Botón Editar
         const btnEditar = document.createElement('button');
         btnEditar.textContent = 'Editar';
-        btnEditar.classList.add('btn-editar'); // Agregar clase
+        btnEditar.classList.add('btn-editar');
         btnEditar.onclick = () => editarTurno(turno.id);
         li.appendChild(btnEditar);
 
         // Botón Borrar
         const btnBorrar = document.createElement('button');
         btnBorrar.textContent = 'Borrar';
-        btnBorrar.classList.add('btn-borrar'); // Agregar clase
+        btnBorrar.classList.add('btn-borrar');
         btnBorrar.onclick = () => borrarTurno(turno.id);
         li.appendChild(btnBorrar);
 
@@ -84,6 +85,27 @@ formTurno.onsubmit = (e) => {
     const especialidad = document.getElementById("especialidad").value;
     const profesional = document.getElementById("profesional").value;
     const fecha = document.getElementById("fecha").value;
+    const horario = document.getElementById("horario").value;
+
+    // Validar DNI
+    if (dni.length < 6 || dni.length > 8 || dni < 0) {
+        alert("El DNI debe tener entre 6 y 8 dígitos y no puede ser negativo.");
+        return;
+    }
+
+    // Validar que la fecha no sea pasada
+    const fechaActual = new Date().toISOString().split('T')[0];
+    if (fecha < fechaActual) {
+        alert("No se puede seleccionar una fecha pasada.");
+        return;
+    }
+
+    // Validar que no haya turnos en el mismo día y horario
+    const turnoExistente = turnos.some(turno => turno.fecha === fecha && turno.horario === horario);
+    if (turnoExistente) {
+        alert("Ya hay un turno reservado para esta fecha y horario.");
+        return;
+    }
 
     // Crear un nuevo turno
     const nuevoTurno = {
@@ -94,7 +116,8 @@ formTurno.onsubmit = (e) => {
         email,
         especialidad,
         profesional,
-        fecha
+        fecha,
+        horario
     };
 
     // Guardar el turno en el array y en el localStorage
@@ -112,5 +135,20 @@ formTurno.onsubmit = (e) => {
 // Inicializar la vista de turnos
 renderMisTurnos();
 
-// Función para editar un turno (aquí puedes implementar la lógica de edición)
-function editarTurno(id){}
+// Función para editar un turno
+function editarTurno(id) {
+    const turno = turnos.find(turno => turno.id === id);
+
+    // Rellenar el formulario con los datos del turno a editar
+    document.getElementById("nombre").value = turno.nombre;
+    document.getElementById("apellido").value = turno.apellido;
+    document.getElementById("dni").value = turno.dni;
+    document.getElementById("email").value = turno.email;
+    document.getElementById("especialidad").value = turno.especialidad;
+    document.getElementById("profesional").value = turno.profesional;
+    document.getElementById("fecha").value = turno.fecha;
+    document.getElementById("horario").value = turno.horario;
+
+    // Borrar el turno original
+    borrarTurno(id);
+}
