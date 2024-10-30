@@ -1,154 +1,204 @@
-// Array de profesionales con sus especialidades
-const profesionales = [
-    { id: 1, nombre: "Dr. Maximiliano", especialidad: "Traumatólogo" },
-    { id: 2, nombre: "Dr. Juan", especialidad: "Traumatólogo" },
-    { id: 3, nombre: "Lic. Damian", especialidad: "Kinesiólogo" },
-    { id: 4, nombre: "Dr. Adrian", especialidad: "Médico Clínico" },
-    { id: 5, nombre: "Dra. Mariana", especialidad: "Dermatóloga" }
-];
+let pacientesRegistrados = JSON.parse(localStorage.getItem('pacientes')) || [];
+let turnosGuardados = JSON.parse(localStorage.getItem('turnos')) || [];
 
-// Array para almacenar los turnos
-let turnos = JSON.parse(localStorage.getItem("turnos")) || [];
-
-// Elementos del DOM
-const especialidadSelect = document.getElementById("especialidad");
-const profesionalSelect = document.getElementById("profesional");
-const formTurno = document.getElementById("formTurno");
-const listaTurnos = document.getElementById("listaTurnos");
-const horarioSelect = document.getElementById("horario");
-
-// Llenar el select de profesionales dinámicamente según la especialidad elegida
-especialidadSelect.onchange = () => {
-    profesionalSelect.innerHTML = ""; // Limpiar el select
-    const especialidadSeleccionada = especialidadSelect.value;
-
-    // Filtrar los profesionales por especialidad
-    const profesionalesFiltrados = profesionales.filter(
-        prof => prof.especialidad === especialidadSeleccionada
-    );
-
-    // Llenar el select con los profesionales filtrados
-    profesionalesFiltrados.forEach(prof => {
-        const option = document.createElement("option");
-        option.value = prof.nombre;
-        option.text = prof.nombre;
-        profesionalSelect.appendChild(option);
-    });
-};
-
-// Inicializar el select de profesionales al cargar la página
-especialidadSelect.onchange();
-
-// Función para renderizar la lista de turnos en el DOM
-function renderMisTurnos() {
-    listaTurnos.innerHTML = "";
-    turnos.forEach(turno => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-            ${turno.fecha} - ${turno.horario} - ${turno.profesional} (${turno.especialidad})<br>
-            Paciente: ${turno.nombre} ${turno.apellido}, DNI: ${turno.dni}
-        `;
-        
-        // Botón Editar
-        const btnEditar = document.createElement('button');
-        btnEditar.textContent = 'Editar';
-        btnEditar.classList.add('btn-editar');
-        btnEditar.onclick = () => editarTurno(turno.id);
-        li.appendChild(btnEditar);
-
-        // Botón Borrar
-        const btnBorrar = document.createElement('button');
-        btnBorrar.textContent = 'Borrar';
-        btnBorrar.classList.add('btn-borrar');
-        btnBorrar.onclick = () => borrarTurno(turno.id);
-        li.appendChild(btnBorrar);
-
-        listaTurnos.appendChild(li);
-    });
+// Función para inicializar la fecha mínima en el selector de fechas
+function inicializarFechaMinima() {
+    const hoy = new Date().toISOString().split("T")[0];
+    document.getElementById("fecha").setAttribute("min", hoy);
 }
 
-// Función para borrar un turno
-function borrarTurno(id) {
-    turnos = turnos.filter(turno => turno.id !== id);
-    localStorage.setItem("turnos", JSON.stringify(turnos));
-    renderMisTurnos();
+// Mostrar mensaje
+function mostrarMensaje(mensaje) {
+    alert(mensaje); // Puedes cambiar esto por SweetAlert para mejorar la experiencia
 }
 
-// Función para registrar un nuevo turno
-formTurno.onsubmit = (e) => {
+// Mostrar sección
+function mostrarSeccion(seccion) {
+    document.querySelectorAll('section').forEach(sec => sec.classList.add('oculto'));
+    document.getElementById(seccion).classList.remove('oculto');
+}
+
+// Verificar registro del paciente
+document.getElementById('form-verificar').addEventListener('submit', (e) => {
     e.preventDefault();
+    const dni = document.getElementById('dni-verificacion').value;
+    const paciente = pacientesRegistrados.find(p => p.dni === dni);
 
-    const nombre = document.getElementById("nombre").value;
-    const apellido = document.getElementById("apellido").value;
-    const dni = document.getElementById("dni").value;
-    const email = document.getElementById("email").value;
-    const especialidad = document.getElementById("especialidad").value;
-    const profesional = document.getElementById("profesional").value;
-    const fecha = document.getElementById("fecha").value;
-    const horario = document.getElementById("horario").value;
+    if (paciente) {
+        const turnosPaciente = turnosGuardados.filter(turno => turno.dni === dni);
 
-    // Validar DNI
-    if (dni.length < 6 || dni.length > 8 || dni < 0) {
-        alert("El DNI debe tener entre 6 y 8 dígitos y no puede ser negativo.");
+        if (turnosPaciente.length > 0) {
+            mostrarTurnosPaciente(dni);
+            mostrarSeccion('mis-turnos');
+        } else {
+            mostrarSeccion('solicitar-turno');
+            mostrarMensaje("No tienes turnos registrados. Solicita uno nuevo.");
+        }
+    } else {
+        mostrarSeccion('registro-paciente');
+        mostrarMensaje("No está registrado. Proceda a registrarse.");
+    }
+});
+
+// Registrar nuevo paciente
+document.getElementById('form-registro').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nombre = document.getElementById('nombre').value;
+    const dni = document.getElementById('dni').value;
+
+    const nuevoPaciente = { nombre, dni };
+    pacientesRegistrados.push(nuevoPaciente);
+    localStorage.setItem('pacientes', JSON.stringify(pacientesRegistrados));
+
+    mostrarMensaje("Paciente registrado con éxito.");
+    mostrarSeccion('solicitar-turno');
+});
+
+// Validar si un turno ya existe en el mismo horario y profesional
+function turnoDuplicado(dni, profesional, fecha, horario) {
+    return turnosGuardados.some(turno => 
+        turno.dni === dni &&
+        turno.profesional === profesional &&
+        turno.fecha === fecha &&
+        turno.horario === horario
+    );
+}
+
+// Solicitar turno
+document.getElementById('form-turno').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const especialidad = document.getElementById('especialidad').value;
+    const profesional = document.getElementById('profesional').value;
+    const fecha = document.getElementById('fecha').value;
+    const horario = document.getElementById('horario').value;
+    const dni = document.getElementById('dni-verificacion').value;
+
+    if (turnoDuplicado(dni, profesional, fecha, horario)) {
+        mostrarMensaje("Ya existe un turno para este profesional en el mismo horario.");
         return;
     }
 
-    // Validar que la fecha no sea pasada
-    const fechaActual = new Date().toISOString().split('T')[0];
-    if (fecha < fechaActual) {
-        alert("No se puede seleccionar una fecha pasada.");
-        return;
-    }
+    const nuevoTurno = { dni, especialidad, profesional, fecha, horario };
+    turnosGuardados.push(nuevoTurno);
+    localStorage.setItem('turnos', JSON.stringify(turnosGuardados));
 
-    // Validar que no haya turnos en el mismo día y horario
-    const turnoExistente = turnos.some(turno => turno.fecha === fecha && turno.horario === horario);
-    if (turnoExistente) {
-        alert("Ya hay un turno reservado para esta fecha y horario.");
-        return;
-    }
+    mostrarMensaje("Turno reservado con éxito.");
+    mostrarSeccion('mis-turnos');
+    mostrarTurnosPaciente(dni);
+});
 
-    // Crear un nuevo turno
-    const nuevoTurno = {
-        id: Date.now(),
-        nombre,
-        apellido,
-        dni,
-        email,
-        especialidad,
-        profesional,
-        fecha,
-        horario
-    };
+// Mostrar turnos del paciente
+function mostrarTurnosPaciente(dni) {
+    const turnosPaciente = turnosGuardados.filter(turno => turno.dni === dni);
+    const listaTurnos = document.getElementById('lista-turnos');
+    listaTurnos.innerHTML = '';
 
-    // Guardar el turno en el array y en el localStorage
-    turnos.push(nuevoTurno);
-    localStorage.setItem("turnos", JSON.stringify(turnos));
+    turnosPaciente.forEach((turno, index) => {
+        const turnoElement = document.createElement('div');
+        turnoElement.textContent = `Especialidad: ${turno.especialidad}, Profesional: ${turno.profesional}, Fecha: ${turno.fecha}, Horario: ${turno.horario}`;
+
+        // Botón de Editar
+        const botonEditar = document.createElement('button');
+        botonEditar.textContent = 'Editar';
+        botonEditar.addEventListener('click', () => editarTurno(dni, index));
+
+        // Botón de Eliminar
+        const botonEliminar = document.createElement('button');
+        botonEliminar.textContent = 'Eliminar';
+        botonEliminar.addEventListener('click', () => eliminarTurno(dni, index));
+
+        turnoElement.appendChild(botonEditar);
+        turnoElement.appendChild(botonEliminar);
+        listaTurnos.appendChild(turnoElement);
+    });
+}
+
+// Editar turno
+function editarTurno(dni, index) {
+    const turno = turnosGuardados.filter(t => t.dni === dni)[index];
     
-    // Limpiar el formulario
-    formTurno.reset();
-    especialidadSelect.onchange(); // Resetear el select de profesionales
+    document.getElementById('especialidad').value = turno.especialidad;
+    actualizarProfesionales(turno.especialidad);
+    document.getElementById('profesional').value = turno.profesional;
+    document.getElementById('fecha').value = turno.fecha;
+    actualizarHorarios(turno.especialidad);
+    document.getElementById('horario').value = turno.horario;
 
-    // Actualizar la lista de turnos
-    renderMisTurnos();
+    mostrarSeccion('solicitar-turno');
+
+    document.getElementById('form-turno').onsubmit = (e) => {
+        e.preventDefault();
+
+        const nuevaFecha = document.getElementById('fecha').value;
+        const nuevoHorario = document.getElementById('horario').value;
+
+        turnosGuardados[index] = { ...turno, fecha: nuevaFecha, horario: nuevoHorario };
+        localStorage.setItem('turnos', JSON.stringify(turnosGuardados));
+
+        mostrarMensaje("Turno editado con éxito.");
+        mostrarSeccion('mis-turnos');
+        mostrarTurnosPaciente(dni);
+    };
 }
 
-// Inicializar la vista de turnos
-renderMisTurnos();
+// Eliminar turno
+function eliminarTurno(dni, index) {
+    turnosGuardados = turnosGuardados.filter((_, i) => !(turnosGuardados[i].dni === dni && i === index));
+    localStorage.setItem('turnos', JSON.stringify(turnosGuardados));
 
-// Función para editar un turno
-function editarTurno(id) {
-    const turno = turnos.find(turno => turno.id === id);
-
-    // Rellenar el formulario con los datos del turno a editar
-    document.getElementById("nombre").value = turno.nombre;
-    document.getElementById("apellido").value = turno.apellido;
-    document.getElementById("dni").value = turno.dni;
-    document.getElementById("email").value = turno.email;
-    document.getElementById("especialidad").value = turno.especialidad;
-    document.getElementById("profesional").value = turno.profesional;
-    document.getElementById("fecha").value = turno.fecha;
-    document.getElementById("horario").value = turno.horario;
-
-    // Borrar el turno original
-    borrarTurno(id);
+    mostrarMensaje("Turno eliminado.");
+    mostrarTurnosPaciente(dni);
 }
+
+// Actualizar profesionales y horarios según especialidad
+document.getElementById('especialidad').addEventListener('change', () => {
+    const especialidad = document.getElementById('especialidad').value.toLowerCase();
+    actualizarProfesionales(especialidad);
+    actualizarHorarios(especialidad);
+});
+
+// Función para actualizar select de profesionales
+function actualizarProfesionales(especialidad) {
+    const profesionalSelect = document.getElementById('profesional');
+    profesionalSelect.innerHTML = '';
+
+    obtenerDatosProfesionales().then(data => {
+        const profesionales = data[especialidad] || [];
+        if (profesionales.length > 0) {
+            profesionales.forEach(prof => {
+                const option = document.createElement('option');
+                option.value = prof;
+                option.textContent = prof;
+                profesionalSelect.appendChild(option);
+            });
+        } else {
+            const option = document.createElement('option');
+            option.textContent = 'No hay profesionales disponibles';
+            profesionalSelect.appendChild(option);
+        }
+    }).catch(error => {
+        mostrarMensaje("Error al cargar los profesionales.");
+    });
+}
+
+// Función para actualizar horarios
+function actualizarHorarios(especialidad) {
+    const horarioSelect = document.getElementById('horario');
+    horarioSelect.innerHTML = '';
+
+    const horarios = horariosDisponibles[especialidad] || [];
+    if (horarios.length > 0) {
+        horarios.forEach(h => {
+            const option = document.createElement('option');
+            option.value = h;
+            option.textContent = h;
+            horarioSelect.appendChild(option);
+        });
+    } else {
+        const option = document.createElement('option');
+        option.textContent = 'No hay horarios disponibles';
+        horarioSelect.appendChild(option);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", inicializarFechaMinima);

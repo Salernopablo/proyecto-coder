@@ -1,0 +1,18 @@
+[
+    {
+        "nombre": "Dr. Maximiliano",
+        "especialidad": "traumatologo"
+    },
+    {
+        "nombre": "Dr. Ana Gomez",
+        "especialidad": "kinesiologo"
+    },
+    {
+        "nombre": "Dr. Juan Perez",
+        "especialidad": "medico clinico"
+    },
+    {
+        "nombre": "Dr. Sofia Lopez",
+        "especialidad": "dermatologo"
+    }
+]
